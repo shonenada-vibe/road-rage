@@ -164,6 +164,14 @@ func can_be_hit() -> bool:
 	return not launched
 
 
+func hit_kind() -> String:
+	return actor_kind
+
+
+func hit_chaos_value() -> float:
+	return chaos_value
+
+
 func launch(impact_vector: Vector2, impact_force: float) -> void:
 	if launched:
 		return
@@ -182,6 +190,7 @@ func launch(impact_vector: Vector2, impact_force: float) -> void:
 			force_scale *= 0.65
 
 	knockback_velocity = impact_vector.normalized() * maxf(240.0, force_scale)
+	knockback_velocity.x += sign(impact_vector.x) * 60.0
 	angular_velocity = deg_to_rad(randf_range(-780.0, 780.0))
 
 

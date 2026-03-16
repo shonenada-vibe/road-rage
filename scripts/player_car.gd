@@ -1,7 +1,7 @@
 extends CharacterBody2D
 class_name PlayerCar
 
-signal traffic_hit(kind: String, chaos_gain: float, impact_force: float)
+signal traffic_hit(kind: String, chaos_gain: float, impact_force: float, impact_position: Vector2, impact_vector: Vector2)
 
 const ROAD_MARGIN: float = 24.0
 
@@ -19,6 +19,7 @@ var side_speed: float = 0.0
 var last_position: Vector2 = Vector2.ZERO
 var controls_locked: bool = false
 var collision_cooldown: float = 0.0
+var recoil_velocity: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
@@ -91,7 +92,8 @@ func _physics_process(delta: float) -> void:
 		forward_speed = move_toward(forward_speed, 0.0, brake_strength * delta)
 		side_speed = move_toward(side_speed, 0.0, brake_strength * delta)
 
-	velocity = Vector2(side_speed, -forward_speed)
+	recoil_velocity = recoil_velocity.move_toward(Vector2.ZERO, 880.0 * delta)
+	velocity = Vector2(side_speed, -forward_speed) + recoil_velocity
 	move_and_slide()
 	_resolve_world_bounds()
 	_handle_collisions()
@@ -137,14 +139,25 @@ func _handle_collisions() -> void:
 	for index in range(get_slide_collision_count()):
 		var collision := get_slide_collision(index)
 		var collider := collision.get_collider()
-		if collider is TrafficActor and collider.can_be_hit():
+		if collider != null and collider.has_method("can_be_hit") and collider.call("can_be_hit"):
 			var impact_force := maxf(forward_speed * 0.95 + abs(side_speed) * 0.7, 260.0)
-			var impact_vector := Vector2(side_speed * 0.7, -maxf(forward_speed, 260.0))
-			collider.launch(impact_vector, impact_force)
-			forward_speed *= 0.74
-			side_speed *= 0.52
-			collision_cooldown = 0.14
-			emit_signal("traffic_hit", collider.actor_kind, collider.chaos_value + impact_force * 0.028, impact_force)
+			var impact_vector := Vector2(side_speed * 0.9, -maxf(forward_speed, 260.0))
+			if collider.has_method("launch"):
+				collider.call("launch", impact_vector, impact_force)
+
+			var hit_kind: String = "obstacle"
+			if collider.has_method("hit_kind"):
+				hit_kind = String(collider.call("hit_kind"))
+
+			var chaos_value: float = 10.0
+			if collider.has_method("hit_chaos_value"):
+				chaos_value = float(collider.call("hit_chaos_value"))
+
+			forward_speed *= 0.66
+			side_speed *= 0.44
+			recoil_velocity += impact_vector.normalized() * -minf(impact_force * 0.42, 260.0)
+			collision_cooldown = 0.18
+			emit_signal("traffic_hit", hit_kind, chaos_value + impact_force * 0.028, impact_force, collision.get_position(), impact_vector)
 			break
 
 
@@ -161,8 +174,16 @@ func speed_kph() -> int:
 	return int(round(forward_speed * 0.18))
 
 
+func speed_ratio() -> float:
+	return clampf(forward_speed / max_forward_speed, 0.0, 1.0)
+
+
 func is_on_sidewalk() -> bool:
 	return abs(global_position.x) > road_half_width + ROAD_MARGIN
+
+
+func skid_ratio() -> float:
+	return clampf(abs(side_speed) / max_side_speed, 0.0, 1.0)
 
 
 func crossed_line(y_line: float) -> bool:
