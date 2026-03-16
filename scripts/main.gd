@@ -6,6 +6,7 @@ const TrafficLightScene := preload("res://scripts/traffic_light.gd")
 const AIVehicleScene := preload("res://scripts/ai_vehicle.gd")
 const AudioLabScene := preload("res://scripts/audio_lab.gd")
 const FxManagerScene := preload("res://scripts/fx_manager.gd")
+const UIFontLib := preload("res://scripts/ui_font.gd")
 
 const WORLD_LENGTH: float = 4200.0
 const ROAD_HALF_WIDTH: float = 360.0
@@ -33,6 +34,7 @@ var finish_label: Label
 var finish_panel: Panel
 var audio_lab: AudioLab
 var fx_manager: FxManager
+var ui_font: Font
 
 var rule_score: float = 100.0
 var chaos_score: float = 0.0
@@ -52,6 +54,7 @@ var ai_traffic: Array = []
 
 func _ready() -> void:
 	randomize()
+	ui_font = UIFontLib.create_default()
 	audio_lab = AudioLabScene.new()
 	add_child(audio_lab)
 	fx_manager = FxManagerScene.new()
@@ -471,6 +474,7 @@ func _make_ui_label(pos: Vector2, label_size: Vector2, font_size: int, text_valu
 	var label := Label.new()
 	label.position = pos
 	label.size = label_size
+	label.add_theme_font_override("font", ui_font)
 	label.add_theme_font_size_override("font_size", font_size)
 	label.modulate = color
 	label.text = text_value

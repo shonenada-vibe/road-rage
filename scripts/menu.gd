@@ -1,15 +1,18 @@
 extends Control
 
 const AudioLabScene := preload("res://scripts/audio_lab.gd")
+const UIFontLib := preload("res://scripts/ui_font.gd")
 
 var audio_lab: AudioLab
 var pulse: float = 0.0
 var start_button: Button
+var ui_font: Font
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	audio_lab = AudioLabScene.new()
+	ui_font = UIFontLib.create_default()
 	add_child(audio_lab)
 	_build_ui()
 	queue_redraw()
@@ -100,6 +103,7 @@ func _build_ui() -> void:
 	start_button.position = Vector2(36.0, 572.0)
 	start_button.size = Vector2(526.0, 70.0)
 	start_button.text = "开始上路"
+	start_button.add_theme_font_override("font", ui_font)
 	start_button.add_theme_font_size_override("font_size", 32)
 	start_button.add_theme_stylebox_override("normal", _button_style(Color(0.96, 0.34, 0.21), Color(1.0, 0.88, 0.7), 24))
 	start_button.add_theme_stylebox_override("hover", _button_style(Color(1.0, 0.43, 0.24), Color(1.0, 0.94, 0.78), 24))
@@ -111,6 +115,7 @@ func _build_ui() -> void:
 	quit_button.position = Vector2(36.0, 658.0)
 	quit_button.size = Vector2(526.0, 58.0)
 	quit_button.text = "退出"
+	quit_button.add_theme_font_override("font", ui_font)
 	quit_button.add_theme_font_size_override("font_size", 28)
 	quit_button.add_theme_stylebox_override("normal", _button_style(Color(0.15, 0.18, 0.23), Color(0.37, 0.43, 0.51), 22))
 	quit_button.add_theme_stylebox_override("hover", _button_style(Color(0.2, 0.24, 0.29), Color(0.45, 0.51, 0.59), 22))
@@ -158,6 +163,7 @@ func _make_label(pos: Vector2, label_size: Vector2, font_size: int, text_value: 
 	var label := Label.new()
 	label.position = pos
 	label.size = label_size
+	label.add_theme_font_override("font", ui_font)
 	label.add_theme_font_size_override("font_size", font_size)
 	label.modulate = color
 	label.text = text_value
